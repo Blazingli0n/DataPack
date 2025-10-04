@@ -4,4 +4,4 @@
  #
  # Created by DJT3.
 ##
-$kill @e[type=text_display,tag=!top,nbt={score:$(score)}]
+$kill @e[type=text_display,tag=!top,nbt={data:{score:$(score)}}]
