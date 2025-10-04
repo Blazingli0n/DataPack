@@ -9,6 +9,7 @@ $data modify storage leaderboard:temp_player score set value $(score)
 # Reset output
 
 data remove storage leaderboard:temp_namelist names_ordered
+data modify storage leaderboard:temp_namelist names_ordered set value []
 
 $data modify storage leaderboard:temp_namelist names_unordered set from storage leaderboard:namelist names
 execute store result score #int.unorderred_namelist_size leaderboard run data get storage leaderboard:temp_namelist names_unordered

@@ -21,7 +21,7 @@ execute if data storage leaderboard:line {rank:7} at @s as @e[type=minecraft:tex
 execute if data storage leaderboard:line {rank:8} at @s as @e[type=minecraft:text_display,tag=leaderboard,tag=!top,limit=1,sort=nearest] run tag @s add slot8
 
 execute if data storage leaderboard:update {score:"money"} as @s run function leaderboard:lb/build_decimal_values with storage leaderboard:line
-$execute if entity @s[nbt={decimal:1}] at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,$(sep)f,0f],scale:[1f,1f,1f]}}] run data modify entity @e[type=text_display,distance=..0.001,limit=1,sort=nearest] text set value [{"text":"$(rank). "},{"text":"$(name)","bold":$(bold_name)}," "," : "," ",{"text":"$(value_int).$(value_frac)","color":"red"}]
+$execute if entity @s[nbt={decimal:1}] at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,-$(sep)f,0f],scale:[1f,1f,1f]}}] run data modify entity @e[type=text_display,distance=..0.001,limit=1,sort=nearest] text set value [{"text":"$(rank). "},{"text":"$(name)","bold":$(bold_name)}," "," : "," ",{"text":"$(value_int).$(value_frac)","color":"red"}]
 
  # update_line.mcfunction
  # 
@@ -54,11 +54,11 @@ $execute unless entity @s[nbt={time_mode:0}] unless score #int.value_2 leaderboa
 $execute at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,-$(sep)f,0f]},data:{score:$(score)}},tag=!top,tag=$(lines)] run data modify entity @e[type=minecraft:text_display,tag=!top,limit=1,sort=nearest,tag=$(lines)] background set value -1777069036
 $execute at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,-$(sep)f,0f]},data:{score:$(score)}},tag=!top,tag=$(lines)] run data modify entity @e[type=minecraft:text_display,tag=!top,limit=1,sort=nearest,tag=$(lines)] default_background set value $(close_background)
 # Forced Money rendering
-# Ensure a line entity exists at this slot (translation Y=$(sep)f)
+# Ensure a line entity exists at this slot (translation Y=-$(sep)f)
 
 # === Tag-per-slot ensure + render (robust) ===
 # Ensure a unique line entity exists for this rank using tag slot$(rank)
-$execute if data storage leaderboard:update {score:"money"} at @s unless entity @e[type=minecraft:text_display,tag=leaderboard,tag=!top,tag=slot$(rank),distance=..32] run summon minecraft:text_display ~ ~ ~ {Tags:["leaderboard","slot$(rank)"],billboard:"vertical",alignment:"left",line_width:2000,see_through:0,transformation:{translation:[0f,$(sep)f,0f],scale:[1f,1f,1f]}}
+$execute if data storage leaderboard:update {score:"money"} at @s unless entity @e[type=minecraft:text_display,tag=leaderboard,tag=!top,tag=slot$(rank),distance=..32] run summon minecraft:text_display ~ ~ ~ {Tags:["leaderboard","slot$(rank)"],billboard:"vertical",alignment:"left",line_width:2000,see_through:0,transformation:{translation:[0f,-$(sep)f,0f],scale:[1f,1f,1f]}}
 # Recompute decimals every update for Money
 execute if data storage leaderboard:update {score:"money"} as @s run function leaderboard:lb/build_decimal_values with storage leaderboard:line
 # Update that slot's text
