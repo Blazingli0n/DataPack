@@ -29,6 +29,9 @@ data remove storage leaderboard:line bright
 data remove storage leaderboard:line color
 data remove storage leaderboard:line bold_name
 data remove storage leaderboard:line close_background
+data remove storage leaderboard:line money_dollars
+data remove storage leaderboard:line money_cents_tens
+data remove storage leaderboard:line money_cents_ones
 
 
 data remove storage leaderboard:init_edit reverse_order

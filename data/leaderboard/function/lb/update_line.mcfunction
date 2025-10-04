@@ -4,7 +4,7 @@
  #
  # Created by DJT3.
 ##
-$execute if entity @s[nbt={data:{time_mode:0}}] at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,-$(sep)f,0f]},data:{score:$(score)}},tag=!top,tag=$(lines)] run data modify entity @e[type=minecraft:text_display,tag=!top,limit=1,sort=nearest,tag=$(lines)] text set value {"text":"","extra":[{"text":"#$(rank)","color":"$(color)"}," ",{"text":"$(name)","bold":$(bold_name)}," "," : "," ",{"text":"$(value)","color":"red"}]}
+$execute if entity @s[nbt={data:{time_mode:0}}] at @s if entity @e[type=text_display,distance=..0.001,nbt={transformation:{translation:[0f,-$(sep)f,0f]},data:{score:$(score)}},tag=!top,tag=$(lines)] run data modify entity @e[type=minecraft:text_display,tag=!top,limit=1,sort=nearest,tag=$(lines)] text set value {"text":"","extra":[{"text":"#$(rank)","color":"$(color)"}," ",{"text":"$(name)","bold":$(bold_name)}," "," : "," ",{"text":"$","color":"red"},{"text":"$(money_dollars)","color":"red"},{"text":".","color":"red"},{"text":"$(money_cents_tens)$(money_cents_ones)","color":"red"}]}
 
 #Time
 # XH Xm Xs XXms

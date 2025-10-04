@@ -10,8 +10,16 @@ scoreboard players set #const.1 leaderboard 1
 scoreboard players set #const.2 leaderboard 2
 scoreboard players set #const.3 leaderboard 3
 scoreboard players set #const.5 leaderboard 5
+scoreboard players set #const.10 leaderboard 10
 scoreboard players set #const.20 leaderboard 20
 scoreboard players set #const.60 leaderboard 60
+scoreboard players set #const.100 leaderboard 100
+
+scoreboard players set #int.money_total leaderboard 0
+scoreboard players set #int.money_dollars leaderboard 0
+scoreboard players set #int.money_cents leaderboard 0
+scoreboard players set #int.money_cents_tens leaderboard 0
+scoreboard players set #int.money_cents_ones leaderboard 0
 
 # init time_mode storage
 data modify storage leaderboard:line value_0 set value 0
