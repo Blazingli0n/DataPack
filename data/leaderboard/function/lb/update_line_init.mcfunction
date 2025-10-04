@@ -15,5 +15,22 @@ data modify storage leaderboard:line close_background set value 1
 $execute as @s at @s if entity @s[nbt={data:{always_show_closest_player:1}}] if entity @p[distance=..10,name='$(name)'] run data modify storage leaderboard:line bold_name set value "true"
 $execute as @s at @s if entity @s[nbt={data:{always_show_closest_player:1}}] if entity @p[distance=..10,name='$(name)'] run data modify storage leaderboard:line close_background set value 0
 
+$execute store result score #int.money_total leaderboard run scoreboard players get $(name) $(score)
+scoreboard players set #int.money_dollars leaderboard 0
+scoreboard players set #int.money_cents leaderboard 0
+scoreboard players set #int.money_cents_tens leaderboard 0
+scoreboard players set #int.money_cents_ones leaderboard 0
+scoreboard players operation #int.money_dollars leaderboard = #int.money_total leaderboard
+scoreboard players operation #int.money_dollars leaderboard /= #const.100 leaderboard
+scoreboard players operation #int.money_cents leaderboard = #int.money_total leaderboard
+scoreboard players operation #int.money_cents leaderboard %= #const.100 leaderboard
+scoreboard players operation #int.money_cents_tens leaderboard = #int.money_cents leaderboard
+scoreboard players operation #int.money_cents_tens leaderboard /= #const.10 leaderboard
+scoreboard players operation #int.money_cents_ones leaderboard = #int.money_cents leaderboard
+scoreboard players operation #int.money_cents_ones leaderboard %= #const.10 leaderboard
+execute store result storage leaderboard:line money_dollars int 1 run scoreboard players get #int.money_dollars leaderboard
+execute store result storage leaderboard:line money_cents_tens int 1 run scoreboard players get #int.money_cents_tens leaderboard
+execute store result storage leaderboard:line money_cents_ones int 1 run scoreboard players get #int.money_cents_ones leaderboard
+
 $execute store result storage leaderboard:line value int 1 run scoreboard players get $(name) $(score)
 execute as @s run function leaderboard:lb/update_line with storage leaderboard:line
