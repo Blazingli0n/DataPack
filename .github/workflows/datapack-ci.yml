@@ -1,0 +1,139 @@
+name: Datapack CI (1.21.9, auto-discover)
+
+on:
+  push:
+    branches: [ main, work/**, feature/** ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-datapack:
+    runs-on: ubuntu-latest
+
+    env:
+      # Put a secret named RCON_PASSWORD in: Repo → Settings → Secrets and variables → Actions
+      RCON_PASS: ${{ secrets.RCON_PASSWORD }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Package all datapacks in the repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p world/datapacks
+          # Find every folder that looks like a datapack root (has pack.mcmeta and data/)
+          found_any=false
+          while IFS= read -r -d '' packdir; do
+            base="$(basename "$packdir")"
+            echo "Zipping datapack: $packdir -> world/datapacks/${base}.zip"
+            (cd "$packdir" && zip -r "../../world/datapacks/${base}.zip" .)
+            found_any=true
+          done < <(find . -type f -name pack.mcmeta -printf '%h\0' | xargs -0 -I{} bash -lc '[ -d "{}/data" ] && echo -n "{}\0"')
+          ls -lah world/datapacks || true
+          if [ "$found_any" = false ]; then
+            echo "No datapack roots found (pack.mcmeta + data/). Commit your datapack to the repo."; exit 1
+          fi
+
+      - name: Start Minecraft Java 1.21.9 (Docker)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${RCON_PASS:-}" ]; then
+            echo "RCON_PASS is empty. Set repo secret RCON_PASSWORD or hardcode a temp value in env."; exit 1
+          fi
+
+          docker run -d --name mc \
+            -e EULA=TRUE \
+            -e VERSION=1.21.9 \
+            -e ENABLE_RCON=true \
+            -e RCON_PASSWORD="${RCON_PASS}" \
+            -e RCON_PORT=25575 \
+            -p 25565:25565 -p 25575:25575 \
+            -v "${{ github.workspace }}:/data" \
+            itzg/minecraft-server:java21
+
+          echo "Waiting for server to be ready..."
+          # Poll up to ~5 minutes for the "Done" line
+          for i in {1..60}; do
+            if docker logs mc 2>&1 | grep -q "Done ("; then
+              echo "Server is ready."
+              break
+            fi
+            sleep 5
+          done
+
+          # Show recent logs for visibility
+          docker logs mc --since 3m || true
+
+      - name: Smoke test via RCON (auto-discover functions)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+
+          say() { docker exec mc rcon-cli --password "${RCON_PASS}" "say $*"; }
+          rc()  { docker exec mc rcon-cli --password "${RCON_PASS}" "$*"; }
+
+          say "CI: reload datapacks"
+          rc "reload"
+          rc "datapack list"
+
+          # Discover all tag files across every datapack (pre-zip locations, ignore world/)
+          mapfile -t LOAD_TAGS < <(find . -path './world' -prune -o -path '*/data/minecraft/tags/functions/load.json' -print)
+          mapfile -t TICK_TAGS < <(find . -path './world' -prune -o -path '*/data/minecraft/tags/functions/tick.json' -print)
+
+          echo "Found load tag files:";  printf '  %s\n' "${LOAD_TAGS[@]:-<none>}"
+          echo "Found tick tag files:";  printf '  %s\n' "${TICK_TAGS[@]:-<none>}"
+
+          # Extract function IDs from tag files (string or object {"id":"ns:fn",...})
+          discover_funcs() {
+            local file="$1"
+            jq -r '.values[] | if type=="string" then . else .id end' "$file" 2>/dev/null || true
+          }
+
+          # Run each discovered function once (ignore failure here; we'll fail on log scan)
+          run_fn() {
+            local fn="$1"
+            [ -z "$fn" ] && return 0
+            echo ">> Running function: $fn"
+            rc "function $fn" || true
+          }
+
+          echo "Discovering load functions..."
+          for f in "${LOAD_TAGS[@]:-}"; do
+            while IFS= read -r fn; do run_fn "$fn"; done < <(discover_funcs "$f")
+          done
+
+          echo "Discovering tick functions..."
+          for f in "${TICK_TAGS[@]:-}"; do
+            while IFS= read -r fn; do run_fn "$fn"; done < <(discover_funcs "$f")
+          done
+
+          # Optional extra sanity checks (won't fail this step directly)
+          rc "scoreboard objectives add _ci dummy" || true
+          rc "scoreboard players set CI_Tester _ci 1" || true
+
+      - name: Fail if server logged errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker logs mc > server.log
+          echo "---- tail of server.log ----"
+          tail -n 400 server.log || true
+
+          # Basic error patterns; extend as needed
+          if grep -E "(Failed to load datapacks|Error while executing function|Unknown function|Unknown scoreboard objective)" server.log; then
+            echo "Datapack errors detected in server log."
+            exit 1
+          fi
+
+      - name: Stop server
+        if: always()
+        shell: bash
+        run: |
+          docker exec mc rcon-cli --password "${RCON_PASS}" "stop" || true
+          docker rm -f mc || true
