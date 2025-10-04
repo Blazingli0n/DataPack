@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "leaderboard:commands/reset",
+    "leaderboard:commands/money_setup",
+    "leaderboard:commands/money_setup_constants",
+    "leaderboard:commands/auto_money_refresh"
+  ]
+}

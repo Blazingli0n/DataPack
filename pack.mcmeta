@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "description": "Leaderboards from scoreboards v3.1",
+    "min_format": [
+      88,
+      0
+    ],
+    "max_format": 88
+  }
+}
